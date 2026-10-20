@@ -12,6 +12,7 @@ RESULTS_DIR = ROOT / "outputs"
 SEED = 42
 DRY_RUN = os.environ.get("DRY_RUN", "0") == "1"
 DRY_RUN_AUTHORS = 300
+DRY_RUN_SEED_WORKS = 200
 
 # --- API ---
 API_BASE = "https://api.openalex.org"

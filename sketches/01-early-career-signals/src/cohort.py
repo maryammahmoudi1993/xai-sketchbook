@@ -27,7 +27,7 @@ OUTCOME_SELECT = "id,publication_year,cited_by_count,authorships"
 # ---------------------------------------------------------------- Stage 0
 def collect_candidate_authors(client: OpenAlexClient, dry_run: bool = config.DRY_RUN) -> list[str]:
     """Author IDs appearing on a seeded random sample of AI works per seed year."""
-    n_sample = 200 if dry_run else config.SEED_SAMPLE_WORKS
+    n_sample = config.DRY_RUN_SEED_WORKS if dry_run else config.SEED_SAMPLE_WORKS
     authors: set[str] = set()
     for year in range(config.SEED_YEARS[0], config.SEED_YEARS[1] + 1):
         filt = (f"primary_topic.subfield.id:{config.SUBFIELD_ID},publication_year:{year},"
