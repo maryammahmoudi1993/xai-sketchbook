@@ -132,8 +132,11 @@ class OpenAlexClient:
 
     def check_budget(self, verbose: bool = False) -> float | None:
         info = self.rate_limit()
-        remaining = _find_number(info, {"remaining_usd", "credits_remaining", "remaining_budget_usd",
-                                        "budget_remaining_usd", "remaining"})
+        remaining = None
+        for key in ("daily_remaining_usd", "remaining_usd", "prepaid_remaining_usd"):
+            remaining = _find_number(info, {key})
+            if remaining is not None:
+                break
         self.last_remaining_usd = remaining
         if self.start_remaining_usd is None:
             self.start_remaining_usd = remaining

@@ -53,7 +53,7 @@ def test_client_error_is_not_retried(tmp_path):
 
 
 def test_budget_exhausted_raises(tmp_path):
-    c = make_client(tmp_path, [FakeResp(200, {"credits": {"remaining_usd": 0.001}})])
+    c = make_client(tmp_path, [FakeResp(200, {"rate_limit": {"daily_remaining_usd": 0.001, "credits_remaining": 9904}})])
     with pytest.raises(api.BudgetExhausted):
         c.check_budget()
 
