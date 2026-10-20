@@ -28,3 +28,20 @@ def test_run_all_shapes_and_auc_above_chance():
     assert lo <= m["roc_auc"][0] <= hi and m["roc_auc"][0] > 0.6
     assert "early_citations" not in features.FEATURES_NO_EARLY_CITES
     assert len(res["metrics"]) == 4
+
+
+def test_group_analysis_and_explain():
+    from src import explain
+    df = synthetic(3000)
+    df["institution_tier"] = np.random.default_rng(1).integers(1, 5, len(df))
+    ga = explain.group_analysis(df, n_boot=100)
+    t = ga["table"]
+    assert set(t.n) and t.n.sum() + ga["n_excluded_mid_or_unknown"] == len(df)
+    assert ga["overall_gap"][0] > 0                      # synthetic signal is positive
+    est, lo, hi = explain.adjusted_coauthor_effect(df, n_boot=20)
+    assert lo <= est <= hi or lo <= hi
+    res = modeling.run_all(df, n_boot=20)
+    te = res["test"][features.FEATURES_NO_EARLY_CITES].head(200)
+    sv, iv = explain.shap_explain(res["models"]["without_early_citations"], te)
+    assert sv.shape == te.shape and iv.shape == (200, te.shape[1], te.shape[1])
+    assert not explain.interaction_table(iv, te).empty
