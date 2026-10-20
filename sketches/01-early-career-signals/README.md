@@ -15,9 +15,10 @@
 ## Run
 
 ```bash
+cd sketches/01-early-career-signals            # run all commands from this folder
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-export OPENALEX_API_KEY=...        # required; optional: OPENALEX_MAILTO
+export OPENALEX_API_KEY=...        # or put it in a local .env file (gitignored); optional: OPENALEX_MAILTO
 python -m src.pipeline --dry-run   # ~300 candidate authors, writes to outputs/dry_run/
 python -m src.pipeline             # full run -> results.md, limitations.md, figures/
 python -m src.cost                 # total API spend recorded so far

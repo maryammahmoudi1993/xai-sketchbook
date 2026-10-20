@@ -3,6 +3,18 @@ import os
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load_dotenv(path: Path) -> None:
+    """Minimal .env loader (KEY=VALUE lines); real environment variables win."""
+    if path.exists():
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if "=" in line and not line.lstrip().startswith("#"):
+                k, v = line.split("=", 1)
+                os.environ.setdefault(k.strip(), v.strip().strip('"').strip("'"))
+
+
+_load_dotenv(ROOT / ".env")
 DATA_DIR = Path(os.environ.get("ECS_DATA_DIR", ROOT / "data"))  # gitignored by repo .gitignore
 CACHE_DIR = DATA_DIR / "cache"
 PROCESSED_DIR = DATA_DIR / "processed"
