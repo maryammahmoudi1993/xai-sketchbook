@@ -43,8 +43,8 @@ def _save(fig, path):
 
 def fig_group_bars(ga: dict, path) -> None:
     t = ga["table"]
-    fig = _canvas("Does working with a top researcher early on change your odds?",
-                  "Share of AI researchers who reached the top 5% most-cited by year 15")
+    fig = _canvas("Early work with a top researcher goes with better odds of top-5% citations",
+                  "Share of AI researchers in the top 5% most-cited by year 15 (association, not cause)")
     ax = fig.add_axes([0.12, 0.17, 0.82, 0.60])
     groups = ["Top-ranked institution", "Lower-ranked institution"]
     width = 0.36
@@ -65,8 +65,9 @@ def fig_group_bars(ga: dict, path) -> None:
     ax.yaxis.grid(True, color=GRID)
     ax.set_axisbelow(True)
     ax.legend(frameon=False, loc="upper left", fontsize=18)
-    fig.text(0.06, 0.075, "Bars show 95% confidence ranges. Association only; says nothing about cause.\n"
-             "Top-ranked = top quarter of institutions; lower-ranked = bottom half.", fontsize=14, color=MUTED)
+    fig.text(0.06, 0.075, "Bars show 95% confidence ranges. Top-ranked = top quarter of institutions; lower-ranked = bottom half.\n"
+             f"Excludes {ga['n_excluded_mid_or_unknown']:,} researchers with a middle-ranked or unknown institution.",
+             fontsize=14, color=MUTED)
     _save(fig, path)
 
 
@@ -74,11 +75,20 @@ def _rename(X: pd.DataFrame) -> pd.DataFrame:
     return X.rename(columns=LABEL)
 
 
+def _display(X: pd.DataFrame) -> pd.DataFrame:
+    """Colour scale for plots only: institution rank high = top-ranked, unknown = missing (grey).
+    SHAP values themselves are computed on the model's own encoding."""
+    d = X.copy()
+    t = d["institution_tier"]
+    d["institution_tier"] = np.where(t == 0, np.nan, 5 - t)
+    return _rename(d).rename(columns={LABEL["institution_tier"]: "Institution rank (high = top-ranked)"})
+
+
 def fig_shap_beeswarm(sv, X: pd.DataFrame, path) -> None:
     fig = _canvas("What do the first three years say about a researcher's future?",
                   "Each dot is one researcher. Right = pushes toward 'top 5% by year 15'.")
     plt.sca(fig.add_axes([0.40, 0.14, 0.55, 0.68]))
-    shap.summary_plot(sv, _rename(X), show=False, plot_size=None, max_display=11)
+    shap.summary_plot(sv, _display(X), show=False, plot_size=None, max_display=11)
     ax = plt.gca()
     ax.tick_params(labelsize=17)
     ax.set_xlabel("Effect on prediction (SHAP value)", fontsize=17)
@@ -87,26 +97,28 @@ def fig_shap_beeswarm(sv, X: pd.DataFrame, path) -> None:
 
 
 def fig_interaction(tab: pd.DataFrame, path) -> None:
-    fig = _canvas("Does a top coauthor matter more at lower-ranked institutions?",
-                  "Extra push from combining the two signals, by institution rank group")
-    ax = fig.add_axes([0.12, 0.17, 0.82, 0.60])
-    tiers = [1, 2, 3, 4, 0]
-    for c, lab, col in ((1, "Has a top coauthor", C_YES), (0, "No top coauthor", C_NO)):
-        s = tab[tab.has_top_coauthor == c].set_index("tier").reindex(tiers)
-        ax.plot(range(len(tiers)), s["mean"].values, marker="o", ms=12, lw=3, color=col, label=lab)
-        for xi, (m, n) in enumerate(zip(s["mean"].values, s["size"].values)):
-            if not np.isnan(m):
-                ax.annotate(f"n={int(n)}", (xi, m), textcoords="offset points",
-                            xytext=(0, 14 if c else -26), ha="center", fontsize=13, color=MUTED)
+    """Among held-out researchers who HAVE a top coauthor: how much that fact pushed the model's
+    prediction up, by institution group. Bars = total push; markers = the part due to the interaction."""
+    fig = _canvas("Does a top coauthor push predictions up more at lower-ranked institutions?",
+                  "Model view, held-out researchers who had a top coauthor")
+    ax = fig.add_axes([0.12, 0.17, 0.82, 0.58])
+    x = np.arange(len(tab))
+    y, lo, hi = tab["shap"].values, tab["shap_lo"].values, tab["shap_hi"].values
+    ax.bar(x, y, 0.5, color=C_YES, label="Total push from having a top coauthor")
+    ax.errorbar(x, y, yerr=np.vstack([y - lo, hi - y]), fmt="none", ecolor=INK, capsize=8, lw=2)
+    ax.errorbar(x + 0.32, tab["interaction"].values,
+                yerr=np.vstack([tab["interaction"] - tab["interaction_lo"], tab["interaction_hi"] - tab["interaction"]]),
+                fmt="D", color=C_BLUE, ms=11, capsize=6, lw=2, label="Part due to institution rank (interaction)")
+    for xi, n in zip(x, tab["n"]):
+        ax.text(xi, 0.03, f"n={int(n)}", ha="center", color="white", fontsize=16)
     ax.axhline(0, color=MUTED, lw=1)
-    ax.set_xticks(range(len(tiers)), [TIER_NAME[t] for t in tiers], fontsize=16)
-    ax.set_xlabel("Institution rank (by research impact)")
-    ax.set_ylabel("Interaction effect (SHAP units)")
+    ax.set_xticks(x, ["Top-ranked\ninstitution", "Lower-ranked\ninstitutions"])
+    ax.set_ylabel("Effect on prediction (SHAP units)")
     ax.yaxis.grid(True, color=GRID)
     ax.set_axisbelow(True)
-    ax.legend(frameon=False, fontsize=18)
-    fig.text(0.06, 0.075, "Above zero = the two signals together push the prediction up more than\n"
-             "each would alone. Computed on held-out researchers (start year 2010-2011).", fontsize=14, color=MUTED)
+    ax.legend(frameon=False, fontsize=15, loc="upper right")
+    fig.text(0.06, 0.075, "Bars/markers show 95% confidence ranges. Overlapping ranges = no clear difference.\n"
+             "Model explanation, not causal effect. Held-out researchers (start year 2010-2011).", fontsize=14, color=MUTED)
     _save(fig, path)
 
 
@@ -132,7 +144,7 @@ def fig_metrics_card(metric: dict, base_rate: float, n_test: int, n_total: int, 
 def fig_dependence(sv, X: pd.DataFrame, feature: str, path) -> None:
     fig = _canvas(f"How '{LABEL[feature]}' moves the prediction", "Each dot is one held-out researcher")
     ax = fig.add_axes([0.14, 0.15, 0.80, 0.62])
-    shap.dependence_plot(LABEL[feature], sv, _rename(X), interaction_index=None, show=False, ax=ax)
+    shap.dependence_plot(LABEL[feature], sv, _display(X), interaction_index=None, show=False, ax=ax)
     ax.set_ylabel("Effect on prediction (SHAP value)")
     _save(fig, path)
 

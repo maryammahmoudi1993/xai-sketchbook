@@ -92,6 +92,13 @@ def write_results(path: Path, ctx: dict) -> list[dict]:
           f"- Difference-in-differences: {fmt_ci(ga['did'], pct=True)}",
           f"- Adjusted effect of top coauthor (log-odds, standardized logistic, bootstrap): {fmt_ci(ctx['adj'])}",
           f"- Agreement with Li et al. 2019 (Nature Communications; early collaboration with a top scientist is associated with higher later success): **{ctx['li']}**.\n",
+          "## Model view: push from a top coauthor, by institution group (test cohorts, authors with a top coauthor)\n",
+          "| Institution group | n | Mean SHAP of top coauthor (95% CI) | Mean interaction with institution rank (95% CI) |",
+          "|---|---|---|---|"]
+    for r in ctx["inter"].itertuples():
+        L.append(f"| {r.tier_group} | {r.n} | {r.shap:.2f} ({r.shap_lo:.2f} to {r.shap_hi:.2f}) | "
+                 f"{r.interaction:.2f} ({r.interaction_lo:.2f} to {r.interaction_hi:.2f}) |")
+    L += ["",
           "## Secondary target\n",
           f"- h-index over t0..t0+14 (median / 95th pct): {ctx['h_med']:.0f} / {ctx['h_p95']:.0f}. Not modeled further (classification is the primary task).\n",
           "## Candidate headline findings, ranked by robustness\n",
@@ -114,6 +121,7 @@ def write_limitations(path: Path, ctx: dict) -> None:
 - **Author disambiguation errors.** OpenAlex merges and splits author profiles. Merges inflate counts and citations; splits shorten apparent careers and can make a senior author look like a newcomer (t0 is the first *indexed* year, not necessarily the first publication).
 - **Venue coverage is uneven.** Conferences are inconsistently indexed as sources. Hand-listed venues with no match are reported in results.md (unmatched: {', '.join(f['venues']['hand_unmatched']) or 'none'}); n_top_venue_papers is therefore a lower bound for conference-heavy careers.
 - **Current-h-index approximation.** has_top_coauthor uses each coauthor's *current* h-index, which includes work done after the collaboration. A stricter pre-collaboration version was not implemented. Institution tier likewise uses current institution statistics and the author's most frequent *early* affiliation; {f['share_unknown_institution']*100:.1f}% have no institution and form their own category.
+- **Shared papers inflate the coauthor effect mechanically.** Papers written with a highly cited coauthor add to the author's own citation total, so part of the top-coauthor association is built into the target. This was not separated out.
 - **Current citation totals.** The target counts citations accumulated up to the data date for papers published in t0..t0+14, so earlier-published work has had more time to be cited than a strict 15-year snapshot. early_citations overlaps the target; models are reported with and without it.
 - **Top-5% label is relative to this cohort** (threshold {ctx['threshold']:.0f} citations) and sensitive to field-level citation inflation in 2008-2025.
 - **Single field, single database.** Artificial Intelligence (OpenAlex subfield 1702) only; no cross-field normalization and no claim that results generalize to other fields or to databases such as Scopus or Google Scholar.

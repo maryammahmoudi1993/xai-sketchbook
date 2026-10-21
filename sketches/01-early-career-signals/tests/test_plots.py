@@ -15,7 +15,7 @@ def test_figures_have_linkedin_size(tmp_path):
     ga = explain.group_analysis(df.assign(institution_tier=df.institution_tier.clip(1, 4)), n_boot=20)
     plots.fig_group_bars(ga, tmp_path / "a.png")
     plots.fig_shap_beeswarm(sv, X, tmp_path / "b.png")
-    plots.fig_interaction(explain.interaction_table(iv, X), tmp_path / "c.png")
+    plots.fig_interaction(explain.shap_by_group(sv, iv, X, n_boot=20), tmp_path / "c.png")
     plots.fig_metrics_card(res["metrics"][("lightgbm", "without_early_citations")], 0.05, 100, 400, tmp_path / "d.png")
     plots.fig_dependence(sv, X, "n_papers_early", tmp_path / "e.png")
     plots.fig_calibration(res["calibration"], tmp_path / "f.png")

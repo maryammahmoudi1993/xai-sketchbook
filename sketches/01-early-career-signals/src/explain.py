@@ -35,6 +35,27 @@ def interaction_table(iv: np.ndarray, X: pd.DataFrame) -> pd.DataFrame:
     return d.groupby(["tier", "has_top_coauthor"]).interaction.agg(["mean", "size"]).reset_index()
 
 
+def shap_by_group(sv: np.ndarray, iv: np.ndarray, X: pd.DataFrame, n_boot: int = 1000) -> pd.DataFrame:
+    """Among test authors WITH a top coauthor: mean SHAP of has_top_coauthor (its total push on the
+    prediction) and mean SHAP interaction with institution tier, by tier group, with bootstrap CIs."""
+    cols = list(X.columns)
+    i, j = cols.index("has_top_coauthor"), cols.index("institution_tier")
+    grp = group_assignment(X)
+    rng = np.random.default_rng(config.SEED)
+    rows = []
+    for name in ("Top-ranked institution", "Lower-ranked institution"):
+        m = ((grp == name) & (X.has_top_coauthor == 1)).values
+        row = {"tier_group": name, "n": int(m.sum())}
+        for key, v in (("shap", sv[m, i]), ("interaction", 2 * iv[m, i, j])):
+            if len(v) == 0:
+                row.update({key: np.nan, key + "_lo": np.nan, key + "_hi": np.nan})
+                continue
+            b = [rng.choice(v, len(v)).mean() for _ in range(n_boot)]
+            row.update({key: float(v.mean()), key + "_lo": float(np.percentile(b, 2.5)), key + "_hi": float(np.percentile(b, 97.5))})
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
 def group_assignment(df: pd.DataFrame) -> pd.Series:
     """Tier group: 'Top-ranked' (tier 1), 'Lower-ranked' (tiers 3-4); tier 2 / unknown excluded."""
     g = pd.Series(np.nan, index=df.index, dtype=object)

@@ -63,13 +63,14 @@ def analyse(table: pd.DataFrame, logs: dict, out_dir: Path, dry_run: bool) -> di
 
     plots.fig_group_bars(ga, fig_dir / "1_top_coauthor_by_institution.png")
     plots.fig_shap_beeswarm(sv, X, fig_dir / "2_shap_beeswarm.png")
-    plots.fig_interaction(explain.interaction_table(iv, X), fig_dir / "3_interaction.png")
+    inter = explain.shap_by_group(sv, iv, X, n_boot=200 if dry_run else 1000)
+    plots.fig_interaction(inter, fig_dir / "3_interaction.png")
     plots.fig_metrics_card(lg, lg["base_rate"], res["n_test"], len(table), fig_dir / "4_metrics_card.png")
     plots.fig_dependence(sv, X, "has_top_coauthor", fig_dir / "5_dependence_top_coauthor.png")
     plots.fig_dependence(sv, X, "n_papers_early", fig_dir / "6_dependence_n_papers.png")
     plots.fig_calibration(res["calibration"], fig_dir / "7_calibration.png")
 
-    ctx = {"res": res, "ga": ga, "adj": adj, "li": explain.li2019_agreement(adj[1], adj[2], adj[0]),
+    ctx = {"res": res, "ga": ga, "inter": inter, "adj": adj, "li": explain.li2019_agreement(adj[1], adj[2], adj[0]),
            "run_date": date.today().isoformat(), "dry_run": dry_run, "n_cohort": len(table),
            "n_pos": int(table.label.sum()), "h_med": float(table.h_index_15.median()),
            "h_p95": float(table.h_index_15.quantile(0.95)), **logs}
