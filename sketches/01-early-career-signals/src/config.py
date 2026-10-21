@@ -46,7 +46,9 @@ EARLY_WINDOW = 3          # t0..t0+2
 OUTCOME_WINDOW = 15       # t0..t0+14
 LAST_YEAR = 2025          # t0=2011 -> 2025
 SEED_SAMPLE_WORKS = 10000  # per seed-year sample (OpenAlex `sample`, max 10k)
-CANDIDATE_AUTHOR_CAP = 40000   # cap on candidate authors screened (budget lever)
+_mb = os.environ.get("ECS_MAX_BATCHES")
+CANDIDATE_AUTHOR_CAP = 40000   # candidates screened in a full run (budget lever)
+MAX_STAGE_A_BATCHES = int(_mb) if _mb else None  # preliminary run: only first N batches of 50 candidates
 TARGET_COHORT = (5000, 10000)
 TOP_FRAC = 0.05
 

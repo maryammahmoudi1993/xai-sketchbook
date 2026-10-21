@@ -108,7 +108,10 @@ def _fetch_works_for_authors(client: OpenAlexClient, ids: list[str], year_filter
 def fetch_stage_a(client: OpenAlexClient, candidates: list[str]) -> pd.DataFrame:
     """Works with year <= t0max+2 for all candidates (needed for t0 and early features)."""
     last = config.T0_RANGE[1] + config.EARLY_WINDOW - 1
-    return _fetch_works_for_authors(client, candidates, f"<{last + 1}", WORK_SELECT, True, "stage A")
+    ids = sorted(set(candidates))
+    if config.MAX_STAGE_A_BATCHES:  # chunks of the full sorted list: cache stays valid when the cap is raised later
+        ids = ids[:config.MAX_STAGE_A_BATCHES * config.BATCH_IDS]
+    return _fetch_works_for_authors(client, ids, f"<{last + 1}", WORK_SELECT, True, "stage A")
 
 
 def select_cohort(stage_a: pd.DataFrame) -> tuple[pd.DataFrame, dict]:

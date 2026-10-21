@@ -24,7 +24,7 @@ def build_dataset(client: OpenAlexClient, dry_run: bool):
     cands = co.collect_candidate_authors(client, dry_run)
     stage_a = co.fetch_stage_a(client, cands)
     t0, funnel = co.select_cohort(stage_a)
-    funnel["candidates_screened"] = len(cands)
+    funnel["candidates_screened"] = min(len(cands), (config.MAX_STAGE_A_BATCHES or 10**9) * config.BATCH_IDS)
     if len(t0) < config.TARGET_COHORT[0]:
         print(f"WARNING: cohort size {len(t0)} is below the {config.TARGET_COHORT[0]} target "
               "(raise CANDIDATE_AUTHOR_CAP / SEED_SAMPLE_WORKS or run on another day).")
