@@ -4,7 +4,7 @@
 
 **Post:** [LinkedIn](#)
 
-> **Status: code complete and tested on a fake API; the real OpenAlex run has NOT been executed yet** (needs `OPENALEX_API_KEY`). `results.md` and the real figures appear only after a full run. No result is claimed anywhere in this repo.
+> **Status:** full run completed on 2026-10-21 (7,159 researchers). Results are preliminary and associational; read [limitations.md](limitations.md) first.
 
 ## Setup
 
@@ -37,11 +37,21 @@ The pipeline prints the remaining budget from `/rate-limit`, caches **every** re
 | `src/enrich.py`, `src/features.py` | batched lookups; leakage-free features + data dictionary |
 | `src/modeling.py`, `src/explain.py` | temporal split, models, bootstrap CIs, SHAP, 2x2 analysis |
 | `src/plots.py`, `src/report.py` | 1080x1350 figures; results.md / limitations.md generators |
+| `src/carousel.py` | builds the 14-page LinkedIn PDF from summary.json and the real source code |
 | `notebooks/analysis.ipynb` | thin notebook replaying from cache |
 
 ## Result
 
-Not run yet. After a full run: see [results.md](results.md) and `figures/`. Run date and total API cost: _to be filled from the first full run_ (`python -m src.cost`).
+Run date: 2026-10-21. API cost: about $1.7 of OpenAlex free-tier budget (ledger shows $1.32; roughly $0.4 more was spent in earlier partial runs before the ledger was reset), spread over 3 keys / 2 days.
+
+- Cohort: 7,159 AI researchers (358 in the top 5%); train 2008-09 starters, test 2010-11 starters.
+- Early signals predict the top 5%: LightGBM AUC 0.83 without early citations (95% CI 0.79-0.87), but PR-AUC only 0.31 vs base rate 0.04.
+- Top early coauthor: 15.6 percentage points higher chance of reaching the top 5% (95% CI 12.9-18.1); direction agrees with Li et al. 2019. Part of this is mechanical (shared papers add to the author's own citations).
+- Does it matter more at lower-ranked institutions? Not supported: difference-in-differences -4.6 pp (95% CI -10.9 to +2.6), and only 117 lower-ranked researchers had a top coauthor.
+
+Full numbers: [results.md](results.md) and [summary.json](summary.json). Swipeable post: [LinkedIn_carousel.pdf](LinkedIn_carousel.pdf) (`python -m src.carousel`). Figures in `figures/`:
+
+![main figure](figures/1_top_coauthor_by_institution.png)
 
 ## What this does not show
 
