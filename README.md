@@ -8,7 +8,7 @@ Each folder in `sketches/` is one question, one small experiment, and one honest
 
 | # | Folder | Question | Post |
 |---|--------|----------|------|
-| 01 | [sketches/01-early-career-signals](sketches/01-early-career-signals) | Which first-3-year signals predict a top-5% cited AI researcher, and does a top coauthor matter more at lower-tier institutions? | [LinkedIn](#) |
+| 01 | [sketches/01-early-career-signals](sketches/01-early-career-signals) | Which first-3-year signals predict a top-5% cited AI researcher, and does a top coauthor matter more at lower-tier institutions? | [LinkedIn](https://www.linkedin.com/in/maryam-mahmoudi-data-scientist) |
 
 (One row per sketch, newest at the bottom.)
 
@@ -22,7 +22,7 @@ Each folder in `sketches/` is one question, one small experiment, and one honest
 ## Run a sketch
 
 ```bash
-git clone https://github.com/<your-username>/xai-sketchbook.git
+git clone https://github.com/maryammahmoudi1993/xai-sketchbook.git
 cd xai-sketchbook/sketches/01-early-career-signals
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
