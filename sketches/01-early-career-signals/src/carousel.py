@@ -18,7 +18,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch
-from PIL import Image
+from matplotlib import font_manager
+from PIL import Image, ImageDraw, ImageFont
 
 from . import cohort, config, explain, features, modeling, plots, target
 
@@ -131,6 +132,30 @@ class Page:
         plt.close(self.fig)
         buf.seek(0)
         return Image.open(buf).convert("RGB")
+
+
+# ---------------------------------------------------------------- author footer
+AUTHOR = "Maryam Mahmoudi"
+GITHUB = "github.com/maryammahmoudi1993"
+LINKEDIN = "linkedin.com/in/maryam-mahmoudi-data-scientist"
+REPO = "github.com/maryammahmoudi1993/xai-sketchbook/tree/main/sketches/01-early-career-signals"
+BAND = 170
+
+
+def add_band(im: Image.Image) -> Image.Image:
+    """Append an author/links band under every page (including the pre-rendered figures)."""
+    bold = ImageFont.truetype(font_manager.findfont("DejaVu Sans:bold"), 27)
+    reg = ImageFont.truetype(font_manager.findfont("DejaVu Sans"), 16)
+    out = Image.new("RGB", (im.width, im.height + BAND), "white")
+    out.paste(im, (0, 0))
+    d = ImageDraw.Draw(out)
+    y0 = im.height
+    d.line([(MARGIN, y0 + 6), (im.width - MARGIN, y0 + 6)], fill="#d5dae1", width=2)
+    d.text((MARGIN, y0 + 22), AUTHOR, font=bold, fill=INK)
+    for i, (k, v) in enumerate((("GitHub", GITHUB), ("LinkedIn", LINKEDIN), ("Code", REPO))):
+        d.text((MARGIN, y0 + 66 + i * 32), f"{k}:", font=reg, fill=MUTED)
+        d.text((MARGIN + 95, y0 + 66 + i * 32), v, font=reg, fill=INK)
+    return out
 
 
 # ---------------------------------------------------------------- code excerpts
@@ -288,7 +313,7 @@ def build_pages(s: dict, fig_dir: Path) -> list[Image.Image]:
                f"Many conferences ({', '.join(s['hand_unmatched'][:4])}, ...) are not matched in OpenAlex, so venue quality is understated.",
                f"{pct(s['feat']['share_unknown_institution'], 0)}% of researchers have no institution; the 2x2 leaves out {s['n_excluded']:,}.",
                "Author-name mix-ups in OpenAlex can merge or split careers."], fs=23, gap=10)
-    p.para("Reproduce it: repo xai-sketchbook, folder sketches/01-early-career-signals", fs=22, color=ORANGE, bold=True)
+    p.para("Code, data steps and every number are open: see the links below.", fs=22, color=ORANGE, bold=True)
     p.para("python -m src.pipeline  |  python -m src.carousel", fs=21, color=MUTED)
     pages.append(p.image())
     return pages
@@ -298,7 +323,7 @@ def main(argv=None) -> Path:
     s = json.loads((config.ROOT / "summary.json").read_text(encoding="utf-8"))
     if s["dry_run"]:
         raise SystemExit("summary.json is from a dry run; run the full pipeline first.")
-    pages = build_pages(s, config.FIG_DIR)
+    pages = [add_band(im) for im in build_pages(s, config.FIG_DIR)]
     out = config.ROOT / "LinkedIn_carousel.pdf"
     pages[0].save(out, save_all=True, append_images=pages[1:], resolution=72.0)
     prev = config.RESULTS_DIR / "carousel_preview"
