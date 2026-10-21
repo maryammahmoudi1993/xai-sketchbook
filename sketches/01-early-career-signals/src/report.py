@@ -129,3 +129,22 @@ def write_limitations(path: Path, ctx: dict) -> None:
 - **Multiple comparisons / small cells.** The 2x2 comparison splits the cohort into four groups; cells with few top-5% members have wide intervals. Confidence intervals are bootstrap percentile intervals and ignore author non-independence (shared papers).
 """
     Path(path).write_text(txt, encoding="utf-8")
+
+
+def write_summary_json(path: Path, ctx: dict) -> None:
+    """Machine-readable key numbers (used by src/carousel.py so the PDF never contains hand-typed results)."""
+    ga, res = ctx["ga"], ctx["res"]
+    out = {
+        "run_date": ctx["run_date"], "dry_run": ctx["dry_run"], "n_cohort": ctx["n_cohort"], "n_pos": ctx["n_pos"],
+        "threshold": ctx["threshold"], "funnel": ctx["funnel"], "share_stopped": ctx["share_stopped"],
+        "n_train": res["n_train"], "n_test": res["n_test"],
+        "feat": {k: ctx["feat_log"][k] for k in ("share_has_top_coauthor", "share_unknown_institution",
+                                                  "top_coauthor_h_threshold", "n_coauthors_with_h")},
+        "hand_unmatched": ctx["feat_log"]["venues"]["hand_unmatched"],
+        "metrics": {f"{n}|{t}": v for (n, t), v in res["metrics"].items()},
+        "groups": ga["table"].to_dict("records"),
+        "gap_top": ga["gap_top"], "gap_lower": ga["gap_lower"], "did": ga["did"], "overall_gap": ga["overall_gap"],
+        "n_excluded": ga["n_excluded_mid_or_unknown"], "adj": list(ctx["adj"]), "li": ctx["li"],
+        "inter": ctx["inter"].to_dict("records"),
+    }
+    Path(path).write_text(json.dumps(out, indent=2, default=float), encoding="utf-8")

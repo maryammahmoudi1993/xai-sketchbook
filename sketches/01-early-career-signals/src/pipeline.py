@@ -75,6 +75,7 @@ def analyse(table: pd.DataFrame, logs: dict, out_dir: Path, dry_run: bool) -> di
            "n_pos": int(table.label.sum()), "h_med": float(table.h_index_15.median()),
            "h_p95": float(table.h_index_15.quantile(0.95)), **logs}
     report.write_results(out_dir / "results.md", ctx)
+    report.write_summary_json(out_dir / "summary.json", ctx)
     report.write_limitations(out_dir / "limitations.md", ctx)
     return ctx
 
