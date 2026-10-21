@@ -71,3 +71,16 @@ def test_batch_lookup_chunks_of_50(tmp_path):
     list(c.batch_lookup("authors", ids, "id"))
     assert len(c.session.calls) == 3
     assert c.session.calls[0][1]["filter"].count("|") == config.BATCH_IDS - 1
+
+
+def test_rotates_to_next_key_then_exhausts(tmp_path):
+    low = FakeResp(200, {"rate_limit": {"daily_remaining_usd": 0.001}})
+    ok = FakeResp(200, {"rate_limit": {"daily_remaining_usd": 0.9}})
+    c = api.OpenAlexClient(cache_dir=tmp_path, api_key=None, max_req_per_sec=1000)
+    c.keys, c.api_key = ["k1", "k2"], "k1"
+    c.session = FakeSession([low, ok])
+    assert c.check_budget() == 0.9 and c.api_key == "k2"
+    c.session = FakeSession([low])
+    with pytest.raises(api.BudgetExhausted):
+        c.check_budget()
+    assert c.spent_this_session() is not None

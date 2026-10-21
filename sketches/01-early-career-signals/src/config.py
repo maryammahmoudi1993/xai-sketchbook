@@ -29,6 +29,13 @@ DRY_RUN_SEED_WORKS = 200
 # --- API ---
 API_BASE = "https://api.openalex.org"
 API_KEY_ENV = "OPENALEX_API_KEY"
+
+
+def api_keys() -> list[str]:
+    """OPENALEX_API_KEY, then OPENALEX_API_KEY2, OPENALEX_API_KEY3, ... (used in order)."""
+    names = [API_KEY_ENV] + [f"{API_KEY_ENV}{i}" for i in range(2, 10)]
+    return [os.environ[n] for n in names if os.environ.get(n)]
+
 MAILTO = os.environ.get("OPENALEX_MAILTO", "mahmoudi.maryam.msc@gmail.com")
 MAX_REQ_PER_SEC = 5.0
 WORKERS = 8               # parallel batch fetches (latency-bound)

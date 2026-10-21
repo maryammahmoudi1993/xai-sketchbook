@@ -46,7 +46,11 @@ class OpenAlexClient:
                  max_req_per_sec: float = config.MAX_REQ_PER_SEC, budget_check_every: int = 200):
         self.cache_dir = Path(cache_dir or config.CACHE_DIR)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        self.api_key = api_key if api_key is not None else os.environ.get(config.API_KEY_ENV)
+        self.keys = [api_key] if api_key is not None else config.api_keys()
+        self.key_idx = 0
+        self.api_key = self.keys[0] if self.keys else None
+        self._start_rem: dict[str, float] = {}
+        self._last_rem: dict[str, float] = {}
         self.min_interval = 1.0 / max_req_per_sec
         self._last = 0.0
         self._lock = threading.Lock()
@@ -55,7 +59,6 @@ class OpenAlexClient:
         self.cache_hits = 0
         self.budget_check_every = budget_check_every
         self.last_remaining_usd: float | None = None
-        self.start_remaining_usd: float | None = None
 
     # ---------- cache ----------
     @staticmethod
@@ -130,27 +133,41 @@ class OpenAlexClient:
         """Uncached /rate-limit call (never stored)."""
         return self._http_get(f"{config.API_BASE}/rate-limit", {})
 
+    def _rotate(self) -> bool:
+        """Switch to the next API key (each key has its own daily budget). False if none left."""
+        with self._lock:
+            if self.key_idx + 1 >= len(self.keys):
+                return False
+            self.key_idx += 1
+            self.api_key = self.keys[self.key_idx]
+        print(f"Budget of key #{self.key_idx} used up -> switching to key #{self.key_idx + 1} of {len(self.keys)}")
+        return True
+
     def check_budget(self, verbose: bool = False) -> float | None:
-        info = self.rate_limit()
-        remaining = None
-        for key in ("daily_remaining_usd", "remaining_usd", "prepaid_remaining_usd"):
-            remaining = _find_number(info, {key})
+        """Raise BudgetExhausted only when every configured key is below MIN_BUDGET_USD."""
+        while True:
+            info = self.rate_limit()
+            remaining = None
+            for name in ("daily_remaining_usd", "remaining_usd", "prepaid_remaining_usd"):
+                remaining = _find_number(info, {name})
+                if remaining is not None:
+                    break
             if remaining is not None:
-                break
-        self.last_remaining_usd = remaining
-        if self.start_remaining_usd is None:
-            self.start_remaining_usd = remaining
-        if verbose or remaining is None:
-            print("OpenAlex /rate-limit:", json.dumps(info)[:600])
-        if remaining is not None and remaining < config.MIN_BUDGET_USD:
-            raise BudgetExhausted(f"Remaining budget ${remaining:.3f} < ${config.MIN_BUDGET_USD}. "
-                                  "Re-run tomorrow; the cache makes the run resumable.")
-        return remaining
+                self._start_rem.setdefault(self.api_key, remaining)
+                self._last_rem[self.api_key] = remaining
+            self.last_remaining_usd = remaining
+            if verbose or remaining is None:
+                print(f"OpenAlex /rate-limit (key #{self.key_idx + 1}):", json.dumps(info)[:400])
+            if remaining is None or remaining >= config.MIN_BUDGET_USD:
+                return remaining
+            if not self._rotate():
+                raise BudgetExhausted(f"All {len(self.keys)} key(s) below ${config.MIN_BUDGET_USD} remaining. "
+                                      "Re-run after the daily reset (00:00 UTC); the cache makes the run resumable.")
 
     def spent_this_session(self) -> float | None:
-        if self.start_remaining_usd is None or self.last_remaining_usd is None:
+        if not self._start_rem:
             return None
-        return self.start_remaining_usd - self.last_remaining_usd
+        return sum(self._start_rem[k] - self._last_rem[k] for k in self._start_rem)
 
     # ---------- helpers ----------
     def paginate(self, endpoint: str, params: dict, max_pages: int | None = None):

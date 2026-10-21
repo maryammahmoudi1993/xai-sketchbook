@@ -8,7 +8,7 @@ class FakeOpenAlex(api.OpenAlexClient):
     def __init__(self, n_authors=700, seed=0):
         self.network_calls = self.cache_hits = 0
         self.api_key = "fake"
-        self.start_remaining_usd = self.last_remaining_usd = 1.0
+        self.keys, self._start_rem, self._last_rem = ["fake"], {"fake": 1.0}, {"fake": 1.0}
         r = np.random.default_rng(seed)
         self.works = []
         self.top_co = {f"A{9000 + i}" for i in range(20)}
