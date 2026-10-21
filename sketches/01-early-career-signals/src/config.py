@@ -31,6 +31,7 @@ API_BASE = "https://api.openalex.org"
 API_KEY_ENV = "OPENALEX_API_KEY"
 MAILTO = os.environ.get("OPENALEX_MAILTO", "mahmoudi.maryam.msc@gmail.com")
 MAX_REQ_PER_SEC = 5.0
+WORKERS = 8               # parallel batch fetches (latency-bound)
 BATCH_IDS = 50
 PER_PAGE = 100
 MIN_BUDGET_USD = 0.05  # stop (resumably) when remaining daily budget falls below this

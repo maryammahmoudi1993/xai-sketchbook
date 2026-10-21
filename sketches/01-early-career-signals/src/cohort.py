@@ -13,6 +13,7 @@ first publication if older records are missing or the author profile is split.
 from __future__ import annotations
 
 import random
+from concurrent.futures import ThreadPoolExecutor
 
 import pandas as pd
 from tqdm import tqdm
@@ -82,16 +83,24 @@ def _author_rows(work: dict, wanted: set[str], full: bool) -> list[dict]:
 
 
 def _fetch_works_for_authors(client: OpenAlexClient, ids: list[str], year_filter: str,
-                             select: str, full: bool, desc: str) -> pd.DataFrame:
-    rows: list[dict] = []
+                             select: str, full: bool, desc: str, workers: int = config.WORKERS) -> pd.DataFrame:
+    """Batches run in parallel threads (latency-bound); the client's global limiter caps the rate."""
     ids = sorted(set(ids))
-    for i in tqdm(range(0, len(ids), config.BATCH_IDS), desc=desc):
-        chunk = ids[i:i + config.BATCH_IDS]
+    chunks = [ids[i:i + config.BATCH_IDS] for i in range(0, len(ids), config.BATCH_IDS)]
+
+    def one(chunk):
         wanted = set(chunk)
         params = {"filter": f"authorships.author.id:{'|'.join(chunk)},publication_year:{year_filter},"
                             f"type:{config.WORK_TYPES}", "select": select}
+        rows: list[dict] = []
         for w in client.paginate("works", params):
             rows.extend(_author_rows(w, wanted, full))
+        return rows
+
+    rows: list[dict] = []
+    with ThreadPoolExecutor(max_workers=workers) as ex:
+        for r in tqdm(ex.map(one, chunks), total=len(chunks), desc=desc):
+            rows.extend(r)
     return pd.DataFrame(rows)
 
 
