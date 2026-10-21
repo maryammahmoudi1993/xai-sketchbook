@@ -93,6 +93,7 @@ def write_results(path: Path, ctx: dict) -> list[dict]:
           f"- Adjusted effect of top coauthor (log-odds, standardized logistic, bootstrap): {fmt_ci(ctx['adj'])}",
           f"- Agreement with Li et al. 2019 (Nature Communications; early collaboration with a top scientist is associated with higher later success): **{ctx['li']}**.\n",
           "## Model view: push from a top coauthor, by institution group (test cohorts, authors with a top coauthor)\n",
+          "Descriptive: the CIs only reflect averaging over the n authors for a fixed model (they ignore model and sampling uncertainty) and must not be read as a significance test; use the model-free table above.\n",
           "| Institution group | n | Mean SHAP of top coauthor (95% CI) | Mean interaction with institution rank (95% CI) |",
           "|---|---|---|---|"]
     for r in ctx["inter"].itertuples():

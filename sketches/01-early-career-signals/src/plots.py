@@ -44,7 +44,7 @@ def _save(fig, path):
 def fig_group_bars(ga: dict, path) -> None:
     t = ga["table"]
     fig = _canvas("Early work with a top researcher goes with better odds of top-5% citations",
-                  "Share of AI researchers in the top 5% most-cited by year 15 (association, not cause)")
+                  "Share reaching the top 5% most-cited by year 15 (association only)")
     ax = fig.add_axes([0.12, 0.17, 0.82, 0.60])
     groups = ["Top-ranked institution", "Lower-ranked institution"]
     width = 0.36
@@ -81,7 +81,7 @@ def _display(X: pd.DataFrame) -> pd.DataFrame:
     d = X.copy()
     t = d["institution_tier"]
     d["institution_tier"] = np.where(t == 0, np.nan, 5 - t)
-    return _rename(d).rename(columns={LABEL["institution_tier"]: "Institution rank (high = top-ranked)"})
+    return _rename(d).rename(columns={LABEL["institution_tier"]: "Institution rank"})
 
 
 def fig_shap_beeswarm(sv, X: pd.DataFrame, path) -> None:
@@ -92,7 +92,7 @@ def fig_shap_beeswarm(sv, X: pd.DataFrame, path) -> None:
     ax = plt.gca()
     ax.tick_params(labelsize=17)
     ax.set_xlabel("Effect on prediction (SHAP value)", fontsize=17)
-    fig.text(0.06, 0.06, "Red = high value of the signal, blue = low.", fontsize=15, color=MUTED)
+    fig.text(0.06, 0.06, "Red = high value of the signal, blue = low. Institution rank: red = top-ranked, grey = unknown.", fontsize=15, color=MUTED)
     _save(fig, path)
 
 
@@ -105,19 +105,18 @@ def fig_interaction(tab: pd.DataFrame, path) -> None:
     x = np.arange(len(tab))
     y, lo, hi = tab["shap"].values, tab["shap_lo"].values, tab["shap_hi"].values
     ax.bar(x, y, 0.5, color=C_YES, label="Total push from having a top coauthor")
-    ax.errorbar(x, y, yerr=np.vstack([y - lo, hi - y]), fmt="none", ecolor=INK, capsize=8, lw=2)
     ax.errorbar(x + 0.32, tab["interaction"].values,
-                yerr=np.vstack([tab["interaction"] - tab["interaction_lo"], tab["interaction_hi"] - tab["interaction"]]),
-                fmt="D", color=C_BLUE, ms=11, capsize=6, lw=2, label="Part due to institution rank (interaction)")
+                fmt="D", color=C_BLUE, ms=11, lw=0, label="Part due to institution rank (interaction)")
     for xi, n in zip(x, tab["n"]):
         ax.text(xi, 0.03, f"n={int(n)}", ha="center", color="white", fontsize=16)
     ax.axhline(0, color=MUTED, lw=1)
+    ax.set_ylim(-0.4, 1.7)
     ax.set_xticks(x, ["Top-ranked\ninstitution", "Lower-ranked\ninstitutions"])
     ax.set_ylabel("Effect on prediction (SHAP units)")
     ax.yaxis.grid(True, color=GRID)
     ax.set_axisbelow(True)
-    ax.legend(frameon=False, fontsize=15, loc="upper right")
-    fig.text(0.06, 0.075, "Bars/markers show 95% confidence ranges. Overlapping ranges = no clear difference.\n"
+    ax.legend(frameon=False, fontsize=15, loc="upper left")
+    fig.text(0.06, 0.075, "Descriptive averages from a fixed model; they do not show sampling uncertainty.\n"
              "Model explanation, not causal effect. Held-out researchers (start year 2010-2011).", fontsize=14, color=MUTED)
     _save(fig, path)
 
