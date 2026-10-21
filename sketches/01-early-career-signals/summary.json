@@ -1,0 +1,181 @@
+{
+  "run_date": "2026-10-21",
+  "dry_run": false,
+  "n_cohort": 7159,
+  "n_pos": 358,
+  "threshold": 1540.0999999999995,
+  "funnel": {
+    "candidates_with_works": 40000,
+    "t0_in_range": 12610,
+    "cohort_after_min_early_works": 7159,
+    "candidates_screened": 40000
+  },
+  "share_stopped": 0.29613074451739074,
+  "n_train": 4210,
+  "n_test": 2949,
+  "feat": {
+    "share_has_top_coauthor": 0.17334823299343483,
+    "share_unknown_institution": 0.32867718955161335,
+    "top_coauthor_h_threshold": 55.0,
+    "n_coauthors_with_h": 36444
+  },
+  "hand_unmatched": [
+    "ICML",
+    "ICLR",
+    "CVPR",
+    "ICCV",
+    "ECCV",
+    "AAAI",
+    "IJCAI",
+    "ACL"
+  ],
+  "metrics": {
+    "logistic|with_early_citations": {
+      "roc_auc": [
+        0.9037039660056656,
+        0.873999524597074,
+        0.9292383461501246
+      ],
+      "pr_auc": [
+        0.5138353962643151,
+        0.421170320266252,
+        0.6020290078375417
+      ],
+      "base_rate": 0.0423872499152255,
+      "n": 2949,
+      "n_pos": 125
+    },
+    "lightgbm|with_early_citations": {
+      "roc_auc": [
+        0.8701033994334277,
+        0.8287581834806111,
+        0.9051294944320226
+      ],
+      "pr_auc": [
+        0.47704247170850694,
+        0.3810962541822293,
+        0.5743747242755219
+      ],
+      "base_rate": 0.0423872499152255,
+      "n": 2949,
+      "n_pos": 125
+    },
+    "logistic|without_early_citations": {
+      "roc_auc": [
+        0.8711175637393768,
+        0.8392955575444329,
+        0.9011501362491839
+      ],
+      "pr_auc": [
+        0.3323532005371176,
+        0.250272257789199,
+        0.4196431833525969
+      ],
+      "base_rate": 0.0423872499152255,
+      "n": 2949,
+      "n_pos": 125
+    },
+    "lightgbm|without_early_citations": {
+      "roc_auc": [
+        0.8318087818696884,
+        0.7922104370391129,
+        0.8690247220885258
+      ],
+      "pr_auc": [
+        0.31362994047822973,
+        0.23312651916862553,
+        0.39899073678721575
+      ],
+      "base_rate": 0.0423872499152255,
+      "n": 2949,
+      "n_pos": 125
+    }
+  },
+  "groups": [
+    {
+      "tier_group": "Top-ranked institution",
+      "has_top_coauthor": 0,
+      "n": 1442,
+      "n_top5": 71,
+      "p_top5": 0.049237170596393896,
+      "ci_low": 0.038834951456310676,
+      "ci_high": 0.060332871012482664
+    },
+    {
+      "tier_group": "Top-ranked institution",
+      "has_top_coauthor": 1,
+      "n": 804,
+      "n_top5": 162,
+      "p_top5": 0.20149253731343283,
+      "ci_low": 0.17288557213930347,
+      "ci_high": 0.2300995024875622
+    },
+    {
+      "tier_group": "Lower-ranked institution",
+      "has_top_coauthor": 0,
+      "n": 1253,
+      "n_top5": 27,
+      "p_top5": 0.02154828411811652,
+      "ci_low": 0.014365522745411013,
+      "ci_high": 0.029529130087789304
+    },
+    {
+      "tier_group": "Lower-ranked institution",
+      "has_top_coauthor": 1,
+      "n": 117,
+      "n_top5": 15,
+      "p_top5": 0.1282051282051282,
+      "ci_low": 0.06837606837606838,
+      "ci_high": 0.18803418803418803
+    }
+  ],
+  "gap_top": [
+    0.15225536671703893,
+    0.12281117815913499,
+    0.18377999910295956
+  ],
+  "gap_lower": [
+    0.10665684408701168,
+    0.05002012264582098,
+    0.17104248947824366
+  ],
+  "did": [
+    -0.045598522630027255,
+    -0.10928571462425553,
+    0.026100411091797615
+  ],
+  "overall_gap": [
+    0.15581877405981642,
+    0.1294211406140196,
+    0.18103827304822584
+  ],
+  "n_excluded": 3543,
+  "adj": [
+    0.4382787816963988,
+    0.33617309498792575,
+    0.5456108161587622
+  ],
+  "li": "agrees (positive association, CI excludes 0)",
+  "inter": [
+    {
+      "tier_group": "Top-ranked institution",
+      "n": 294,
+      "shap": 1.0876611683927082,
+      "shap_lo": 1.0610738183674715,
+      "shap_hi": 1.112976162288878,
+      "interaction": -0.1883156168178995,
+      "interaction_lo": -0.19365450070497336,
+      "interaction_hi": -0.18294330005046108
+    },
+    {
+      "tier_group": "Lower-ranked institution",
+      "n": 50,
+      "shap": 1.2100065754072395,
+      "shap_lo": 1.130897982431597,
+      "shap_hi": 1.2902152690211437,
+      "interaction": -0.09162858945306575,
+      "interaction_lo": -0.12054371116353323,
+      "interaction_hi": -0.06438038244321731
+    }
+  ]
+}

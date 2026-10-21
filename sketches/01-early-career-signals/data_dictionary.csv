@@ -1,0 +1,12 @@
+column,plot_label,description
+n_papers_early,Papers in first 3 years,Distinct papers published in t0..t0+2.
+early_citations,Citations to early papers,Current citations to the early papers (overlaps the target; models are run with and without).
+n_distinct_venues,Different venues,Distinct journals/conferences among early papers.
+n_top_venue_papers,Papers in top venues,Early papers in top-10% venues (by 2-yr mean citedness) or a hand-listed set of major AI venues.
+has_top_coauthor,Worked with a top researcher,1 if any early coauthor is in the top 5% of coauthors by current h-index (approximation: uses today's h-index).
+n_unique_coauthors,Different coauthors,Distinct coauthors on early papers.
+mean_team_size,Average team size,Mean number of authors per early paper.
+institution_tier,Institution rank group,"Quartile of the author's most frequent early institution by institution h-index: 1=top ... 4=bottom, 0=unknown."
+topic_diversity,Topic variety,Shannon entropy (nats) of primary topics across early papers.
+first_author_share,Share as first author,Fraction of early papers where the author is listed first.
+cohort_year,Start year,t0: year of first indexed publication (control).
